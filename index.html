@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TOPSIS Penjadwalan Mata Kuliah | Implementasi Jurnal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.7.0/math.min.js"></script>
+    <style>
+      :root {
+        --primary-color: #3498db;
+        --secondary-color: #2c3e50;
+        --accent-color: #e74c3c;
+        --light-color: #ecf0f1;
+        --dark-color: #2c3e50;
+        --success-color: #2ecc71;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        min-height: 100vh;
+        padding-bottom: 50px;
+        color: #333;
+      }
+
+      .header {
+        background: linear-gradient(to right, var(--secondary-color), var(--primary-color));
+        color: white;
+        padding: 25px 0;
+        border-radius: 0 0 20px 20px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        margin-bottom: 30px;
+      }
+
+      .card {
+        border-radius: 15px;
+        border: none;
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+        transition: transform 0.3s, box-shadow 0.3s;
+        margin-bottom: 25px;
+        background-color: rgba(255, 255, 255, 0.95);
+      }
+
+      .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 20px rgba(0, 0, 0, 0.12);
+      }
+
+      .card-header {
+        background: linear-gradient(to right, var(--primary-color), #1a6ca6);
+        color: white;
+        border-radius: 15px 15px 0 0 !important;
+        padding: 15px 20px;
+        font-weight: 600;
+      }
+
+      .btn-primary {
+        background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+        border: none;
+        padding: 10px 25px;
+        border-radius: 30px;
+        font-weight: 600;
+        transition: all 0.3s;
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(52, 152, 219, 0.4);
+      }
+
+      .btn-success {
+        background: linear-gradient(to right, var(--success-color), #27ae60);
+        border: none;
+        padding: 10px 25px;
+        border-radius: 30px;
+        font-weight: 600;
+        transition: all 0.3s;
+      }
+
+      .btn-success:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(46, 204, 113, 0.4);
+      }
+
+      .table-responsive {
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+        max-height: 500px;
+        overflow-y: auto;
+      }
+
+      table {
+        border-collapse: separate;
+        border-spacing: 0;
+        font-size: 0.9rem;
+      }
+
+      th {
+        background-color: var(--primary-color);
+        color: white;
+        font-weight: 600;
+        padding: 12px 15px !important;
+        position: sticky;
+        top: 0;
+      }
+
+      tr:nth-child(even) {
+        background-color: #f8f9fa;
+      }
+
+      .result-card {
+        border-left: 4px solid var(--success-color);
+      }
+
+      .step-number {
+        display: inline-block;
+        width: 30px;
+        height: 30px;
+        background-color: var(--primary-color);
+        color: white;
+        border-radius: 50%;
+        text-align: center;
+        line-height: 30px;
+        margin-right: 10px;
+        font-weight: bold;
+      }
+
+      .info-box {
+        background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+        border-left: 4px solid var(--primary-color);
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+      }
+
+      .matrix-cell {
+        width: 80px;
+        height: 40px;
+        text-align: center;
+        font-weight: 500;
+        background-color: #e3f2fd;
+        border: 1px solid #bbdefb;
+        border-radius: 5px;
+      }
+
+      .topsis-process {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+        border: 1px solid #dee2e6;
+      }
+
+      .topsis-process h5 {
+        border-bottom: 2px solid var(--primary-color);
+        padding-bottom: 10px;
+        margin-bottom: 15px;
+        color: var(--secondary-color);
+      }
+
+      .footer {
+        background-color: var(--secondary-color);
+        color: white;
+        padding: 20px 0;
+        margin-top: 40px;
+        border-radius: 20px 20px 0 0;
+      }
+
+      .input-group {
+        margin-bottom: 10px;
+      }
+
+      .input-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 500;
+      }
+
+      .input-table th,
+      .input-table td {
+        padding: 8px 10px;
+      }
+
+      .highlight {
+        background-color: #fff9c4 !important;
+        transition: background-color 0.5s;
+      }
+
+      .formula-box {
+        background-color: #e8f5e9;
+        border-radius: 8px;
+        padding: 15px;
+        margin: 15px 0;
+        border-left: 4px solid #4caf50;
+      }
+
+      .formula {
+        font-family: "Courier New", monospace;
+        font-size: 1.1rem;
+        background-color: #f1f8e9;
+        padding: 10px;
+        border-radius: 5px;
+        display: inline-block;
+      }
+
+      @media (max-width: 768px) {
+        .card {
+          margin-bottom: 15px;
+        }
+
+        .header h1 {
+          font-size: 1.8rem;
+        }
+
+        .header p {
+          font-size: 0.9rem;
+        }
+
+        table {
+          font-size: 0.8rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <div class="container">
+        <div class="row align-items-center">
+          <div class="col-md-8">
+            <h1><i class="fas fa-calendar-alt me-3"></i>TOPSIS Penjadwalan Mata Kuliah</h1>
+            <p class="lead">Rasyiq Firmansyah (23670015) Irwan (23670065) Prudenta Fajar Octora (23670031)</p>
+          </div>
+          <div class="col-md-4 text-end">
+            <img src="UPGRIS-logo-normal.png" alt="Schedule Icon" width="80" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-12">
+          <div class="card">
+            <div class="card-header"><i class="fas fa-database me-2"></i>Data Input dari Jurnal</div>
+            <div class="card-body">
+              <p>Data kesediaan dosen berdasarkan waktu perkuliahan (dari Tabel 3 jurnal):</p>
+              <div class="table-responsive">
+                <table class="table table-bordered table-hover input-table">
+                  <thead>
+                    <tr>
+                      <th>No</th>
+                      <th>Kelas</th>
+                      <th>Mata Kuliah</th>
+                      <th>Dosen</th>
+                      <th>Sabtu (08.00-09.40)</th>
+                      <th>Sabtu (09.45-11.25)</th>
+                      <th>Sabtu (11.30-13.10)</th>
+                      <th>Sabtu (13.15-14.55)</th>
+                      <th>Minggu (08.00-09.40)</th>
+                      <th>Minggu (09.45-11.25)</th>
+                      <th>Minggu (11.30-13.10)</th>
+                      <th>Minggu (13.15-14.55)</th>
+                    </tr>
+                  </thead>
+                  <tbody id="input-data">
+                    <!-- Data akan diisi oleh JavaScript -->
+                  </tbody>
+                </table>
+              </div>
+              <div class="mt-3">
+                <button class="btn btn-primary me-2" id="load-sample"><i class="fas fa-file-import me-2"></i>Muat Data Contoh</button>
+                <button class="btn btn-success" id="run-topsis"><i class="fas fa-calculator me-2"></i>Hitung TOPSIS</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-lg-12">
+          <div class="card">
+            <div class="card-header"><i class="fas fa-calculator me-2"></i>Proses Perhitungan TOPSIS</div>
+            <div class="card-body">
+              <div class="topsis-process">
+                <h5><span class="step-number">1</span> Perangkingan (ROC)</h5>
+                <p>Bobot kriteria dihitung dengan metode Rank Order Centroid (ROC):</p>
+                <div class="formula-box">
+                  <p class="formula">\[W_n = \frac{1}{n} \sum_{i=1}^{n} \binom{1}{i}\]</p>
+                  <p>Dengan n = jumlah kriteria, i = urutan bobot kepentingan</p>
+                </div>
+                <div class="table-responsive">
+                  <table class="table table-bordered">
+                    <thead>
+                      <tr>
+                        <th>Kriteria</th>
+                        <th>Bobot (ROC)</th>
+                      </tr>
+                    </thead>
+                    <tbody id="roc-weights">
+                      <!-- ROC weights will be populated here -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div class="topsis-process">
+                <h5><span class="step-number">2</span> Matriks Keputusan (X)</h5>
+                <p>Matriks yang berisi nilai kriteria (j) terhadap alternatif (i):</p>
+                <div class="formula-box">
+                  <p class="formula">\[x_{ij} = \begin{bmatrix} x_{11} & \cdots & x_{1n}\\ \vdots & \ddots & \vdots\\ x_{m1} & \cdots & x_{mn} \end{bmatrix}\]</p>
+                </div>
+                <div class="table-responsive">
+                  <table class="table table-bordered">
+                    <thead id="decision-matrix-header">
+                      <!-- Headers will be populated here -->
+                    </thead>
+                    <tbody id="decision-matrix">
+                      <!-- Decision matrix will be populated here -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div class="topsis-process">
+                <h5><span class="step-number">3</span> Normalisasi Matriks (R)</h5>
+                <p>Normalisasi dilakukan untuk menyetarakan nilai matriks:</p>
+                <div class="formula-box">
+                  <p class="formula">\[r_{ij} = \frac{x_{ij}}{\sqrt{\sum_{i=1}^{n} x_{ij}^2}}\]</p>
+                </div>
+                <div class="table-responsive">
+                  <table class="table table-bordered">
+                    <thead id="normalized-matrix-header">
+                      <!-- Headers will be populated here -->
+                    </thead>
+                    <tbody id="normalized-matrix">
+                      <!-- Normalized matrix will be populated here -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div class="topsis-process">
+                <h5><span class="step-number">4</span> Matriks Terbobot (V)</h5>
+                <p>Matriks ternormalisasi dikalikan dengan bobot kriteria:</p>
+                <div class="formula-box">
+                  <p class="formula">\[v_{ij} = w_j \cdot r_{ij}\]</p>
+                </div>
+                <div class="table-responsive">
+                  <table class="table table-bordered">
+                    <thead id="weighted-matrix-header">
+                      <!-- Headers will be populated here -->
+                    </thead>
+                    <tbody id="weighted-matrix">
+                      <!-- Weighted matrix will be populated here -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div class="topsis-process">
+                <h5><span class="step-number">5</span> Solusi Ideal</h5>
+                <p>Menentukan solusi ideal positif (A+) dan negatif (A-):</p>
+                <div class="formula-box">
+                  <p class="formula">\[A^+ = \{(max_i v_{ij}|j \in J), (min_i v_{ij}|j \in J')\}\]</p>
+                  <p class="formula">\[A^- = \{(min_i v_{ij}|j \in J), (max_i v_{ij}|j \in J')\}\]</p>
+                  <p>J = atribut benefit, J' = atribut cost</p>
+                </div>
+                <div class="table-responsive">
+                  <table class="table table-bordered">
+                    <thead>
+                      <tr>
+                        <th>Kriteria</th>
+                        <th>Solusi Ideal Positif (A+)</th>
+                        <th>Solusi Ideal Negatif (A-)</th>
+                      </tr>
+                    </thead>
+                    <tbody id="ideal-solutions">
+                      <!-- Ideal solutions will be populated here -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div class="topsis-process">
+                <h5><span class="step-number">6</span> Jarak Solusi Ideal</h5>
+                <p>Hitung jarak ke solusi ideal positif dan negatif:</p>
+                <div class="formula-box">
+                  <p class="formula">\[S_i^+ = \sqrt{\sum_{j=1}^n (v_{ij} - v_j^+)^2}\]</p>
+                  <p class="formula">\[S_i^- = \sqrt{\sum_{j=1}^n (v_{ij} - v_j^-)^2}\]</p>
+                </div>
+                <div class="table-responsive">
+                  <table class="table table-bordered">
+                    <thead>
+                      <tr>
+                        <th>Alternatif</th>
+                        <th>Jarak ke Solusi Positif (S+)</th>
+                        <th>Jarak ke Solusi Negatif (S-)</th>
+                      </tr>
+                    </thead>
+                    <tbody id="distances">
+                      <!-- Distances will be populated here -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div class="topsis-process">
+                <h5><span class="step-number">7</span> Kedekatan Relatif (C)</h5>
+                <p>Hitung nilai kedekatan relatif terhadap solusi ideal:</p>
+                <div class="formula-box">
+                  <p class="formula">\[C_i = \frac{S_i^-}{S_i^+ + S_i^-}\]</p>
+                  <p>Nilai C_i yang lebih tinggi menunjukkan preferensi yang lebih baik.</p>
+                </div>
+                <div class="table-responsive">
+                  <table class="table table-bordered">
+                    <thead>
+                      <tr>
+                        <th>Alternatif</th>
+                        <th>Kedekatan Relatif (C)</th>
+                        <th>Ranking</th>
+                      </tr>
+                    </thead>
+                    <tbody id="closeness">
+                      <!-- Closeness coefficients will be populated here -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-lg-8">
+          <div class="card result-card">
+            <div class="card-header"><i class="fas fa-chart-bar me-2"></i>Hasil Pembobotan TOPSIS</div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table table-hover">
+                  <thead>
+                    <tr>
+                      <th>Rank</th>
+                      <th>Kelas</th>
+                      <th>Mata Kuliah</th>
+                      <th>Dosen</th>
+                      <th>Nilai TOPSIS</th>
+                    </tr>
+                  </thead>
+                  <tbody id="topsis-results">
+                    <!-- Results will be populated here -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-4">
+          <div class="card">
+            <div class="card-header"><i class="fas fa-chart-pie me-2"></i>Visualisasi Hasil</div>
+            <div class="card-body">
+              <canvas id="topsisChart" height="250"></canvas>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header"><i class="fas fa-lightbulb me-2"></i>Interpretasi Jurnal</div>
+            <div class="card-body">
+              <p>Berdasarkan jurnal, penerapan TOPSIS dan Algoritma Genetika memberikan manfaat:</p>
+              <ul>
+                <li>Waktu penyusunan jadwal berkurang dari 2-4 hari menjadi <strong>&lt; 1 hari</strong></li>
+                <li>Meningkatkan kesesuaian jadwal dengan kesediaan dosen</li>
+                <li>Meminimalkan konflik penjadwalan</li>
+                <li>Mengoptimalkan penggunaan ruangan</li>
+              </ul>
+              <div class="info-box mt-3">
+                <i class="fas fa-quote-left me-2"></i>
+                "Penerapan algoritma genetika serta metode TOPSIS sebagai solusi penjadwalan mata kuliah dapat diterapkan untuk membantu tim penyusun jadwal."
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div class="container text-center">
+        <p>Implementasi TOPSIS Penjadwalan Mata Kuliah Berdasarkan Jurnal JSCE Vol. 4 No. 1 Januari 2023</p>
+        <p class="mb-0">ISSN (online): 2723-1240 | Sulehu, M., & Rimalia, W. (2023)</p>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      // Data contoh dari jurnal (disederhanakan)
+      const sampleData = [
+        { no: 1, kelas: "TI.35", matkul: "LSDI", dosen: "220AA", times: [0.2962, 0.2568, 0.2118, 0.2033, 0.7779, 0.6105, 0.7354, 0.955] },
+        { no: 2, kelas: "SI.51", matkul: "LSIB", dosen: "164AM", times: [0.5879, 0.0255, 0.9091, 0.394, 0.6908, 0.0745, 0.5703, 0.9681] },
+        { no: 3, kelas: "SI.54", matkul: "LPBO", dosen: "214EG", times: [0.5134, 0.7556, 0.2123, 0.3675, 0.7784, 0.3445, 0.5046, 0.7014] },
+        { no: 4, kelas: "SI.35", matkul: "LAKG", dosen: "236HS", times: [0.888, 0.6264, 0.8976, 0.0576, 0.3421, 0.0403, 0.4171, 0.0859] },
+        { no: 5, kelas: "TI.35", matkul: "LAKG", dosen: "104RZ", times: [0.0878, 0.9846, 0.6458, 0.9116, 0.5056, 0.5682, 0.3583, 0.3471] },
+        { no: 6, kelas: "SI.35", matkul: "LPEV", dosen: "230IM", times: [0.4707, 0.2908, 0.693, 0.3902, 0.8329, 0.6793, 0.1733, 0.9863] },
+        { no: 7, kelas: "TI.51", matkul: "LTEI", dosen: "140SS", times: [0.3068, 0.3289, 0.503, 0.947, 0.2784, 0.2259, 0.2891, 0.7835] },
+        { no: 8, kelas: "TI.15", matkul: "LPAP", dosen: "161MA", times: [0.8525, 0.7453, 0.845, 0.3478, 0.296, 0.392, 0.2188, 0.0533] },
+      ];
+
+      const timeSlots = ["Sabtu (08.00-09.40)", "Sabtu (09.45-11.25)", "Sabtu (11.30-13.10)", "Sabtu (13.15-14.55)", "Minggu (08.00-09.40)", "Minggu (09.45-11.25)", "Minggu (11.30-13.10)", "Minggu (13.15-14.55)"];
+
+      // Fungsi untuk memuat data input
+      function loadInputData() {
+        const tableBody = document.getElementById("input-data");
+        tableBody.innerHTML = "";
+
+        sampleData.forEach((item) => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+                    <td>${item.no}</td>
+                    <td>${item.kelas}</td>
+                    <td>${item.matkul}</td>
+                    <td>${item.dosen}</td>
+                    ${item.times.map((time) => `<td>${time.toFixed(4)}</td>`).join("")}
+                `;
+          tableBody.appendChild(row);
+        });
+      }
+
+      // Fungsi untuk menghitung bobot ROC
+      function calculateROCWeights(n) {
+        const weights = [];
+        for (let j = 1; j <= n; j++) {
+          let sum = 0;
+          for (let i = j; i <= n; i++) {
+            sum += 1 / i;
+          }
+          weights.push((1 / n) * sum);
+        }
+        return weights;
+      }
+
+      // Fungsi untuk menampilkan bobot ROC
+      function displayROCWeights(n) {
+        const weights = calculateROCWeights(n);
+        const tableBody = document.getElementById("roc-weights");
+        tableBody.innerHTML = "";
+
+        weights.forEach((weight, index) => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+                    <td>Kriteria ${index + 1}</td>
+                    <td>${weight.toFixed(4)}</td>
+                `;
+          tableBody.appendChild(row);
+        });
+      }
+
+      // Fungsi untuk menampilkan matriks keputusan
+      function displayDecisionMatrix() {
+        const header = document.getElementById("decision-matrix-header");
+        const body = document.getElementById("decision-matrix");
+
+        // Header
+        header.innerHTML = "<tr><th>Alternatif</th>";
+        timeSlots.forEach((slot) => {
+          header.innerHTML += `<th>${slot}</th>`;
+        });
+        header.innerHTML += "</tr>";
+
+        // Body
+        body.innerHTML = "";
+        sampleData.forEach((item) => {
+          const row = document.createElement("tr");
+          row.innerHTML = `<td>${item.kelas} - ${item.matkul}</td>`;
+          item.times.forEach((time) => {
+            row.innerHTML += `<td>${time.toFixed(4)}</td>`;
+          });
+          body.appendChild(row);
+        });
+      }
+
+      // Fungsi untuk menampilkan matriks ternormalisasi
+      function displayNormalizedMatrix() {
+        const header = document.getElementById("normalized-matrix-header");
+        const body = document.getElementById("normalized-matrix");
+
+        // Header
+        header.innerHTML = "<tr><th>Alternatif</th>";
+        timeSlots.forEach((slot) => {
+          header.innerHTML += `<th>${slot}</th>`;
+        });
+        header.innerHTML += "</tr>";
+
+        // Hitung matriks ternormalisasi
+        const normalizedMatrix = [];
+        const n = sampleData.length;
+        const m = timeSlots.length;
+
+        // Hitung norm untuk setiap kolom
+        const norms = [];
+        for (let j = 0; j < m; j++) {
+          let sumSq = 0;
+          for (let i = 0; i < n; i++) {
+            sumSq += Math.pow(sampleData[i].times[j], 2);
+          }
+          norms[j] = Math.sqrt(sumSq);
+        }
+
+        // Normalisasi
+        for (let i = 0; i < n; i++) {
+          const normalizedRow = [];
+          for (let j = 0; j < m; j++) {
+            normalizedRow.push(sampleData[i].times[j] / norms[j]);
+          }
+          normalizedMatrix.push(normalizedRow);
+        }
+
+        // Tampilkan
+        body.innerHTML = "";
+        sampleData.forEach((item, index) => {
+          const row = document.createElement("tr");
+          row.innerHTML = `<td>${item.kelas} - ${item.matkul}</td>`;
+          normalizedMatrix[index].forEach((value) => {
+            row.innerHTML += `<td>${value.toFixed(4)}</td>`;
+          });
+          body.appendChild(row);
+        });
+
+        return normalizedMatrix;
+      }
+
+      // Fungsi untuk menampilkan matriks terbobot
+      function displayWeightedMatrix(normalizedMatrix) {
+        const header = document.getElementById("weighted-matrix-header");
+        const body = document.getElementById("weighted-matrix");
+
+        // Header
+        header.innerHTML = "<tr><th>Alternatif</th>";
+        timeSlots.forEach((slot) => {
+          header.innerHTML += `<th>${slot}</th>`;
+        });
+        header.innerHTML += "</tr>";
+
+        // Hitung bobot ROC
+        const weights = calculateROCWeights(timeSlots.length);
+
+        // Hitung matriks terbobot
+        const weightedMatrix = [];
+        const n = sampleData.length;
+        const m = timeSlots.length;
+
+        for (let i = 0; i < n; i++) {
+          const weightedRow = [];
+          for (let j = 0; j < m; j++) {
+            weightedRow.push(normalizedMatrix[i][j] * weights[j]);
+          }
+          weightedMatrix.push(weightedRow);
+        }
+
+        // Tampilkan
+        body.innerHTML = "";
+        sampleData.forEach((item, index) => {
+          const row = document.createElement("tr");
+          row.innerHTML = `<td>${item.kelas} - ${item.matkul}</td>`;
+          weightedMatrix[index].forEach((value) => {
+            row.innerHTML += `<td>${value.toFixed(4)}</td>`;
+          });
+          body.appendChild(row);
+        });
+
+        return weightedMatrix;
+      }
+
+      // Fungsi untuk menampilkan solusi ideal
+      function displayIdealSolutions(weightedMatrix) {
+        const body = document.getElementById("ideal-solutions");
+        body.innerHTML = "";
+
+        const m = timeSlots.length;
+        const n = sampleData.length;
+        const positiveIdeal = [];
+        const negativeIdeal = [];
+
+        // Asumsi semua kriteria adalah benefit (semakin tinggi semakin baik)
+        for (let j = 0; j < m; j++) {
+          let max = -Infinity;
+          let min = Infinity;
+
+          for (let i = 0; i < n; i++) {
+            if (weightedMatrix[i][j] > max) max = weightedMatrix[i][j];
+            if (weightedMatrix[i][j] < min) min = weightedMatrix[i][j];
+          }
+
+          positiveIdeal.push(max);
+          negativeIdeal.push(min);
+        }
+
+        // Tampilkan
+        for (let j = 0; j < m; j++) {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+                    <td>Kriteria ${j + 1}</td>
+                    <td>${positiveIdeal[j].toFixed(4)}</td>
+                    <td>${negativeIdeal[j].toFixed(4)}</td>
+                `;
+          body.appendChild(row);
+        }
+
+        return { positiveIdeal, negativeIdeal };
+      }
+
+      // Fungsi untuk menghitung jarak
+      function calculateDistances(weightedMatrix, positiveIdeal, negativeIdeal) {
+        const n = sampleData.length;
+        const m = timeSlots.length;
+        const positiveDistances = [];
+        const negativeDistances = [];
+
+        for (let i = 0; i < n; i++) {
+          let sumPos = 0;
+          let sumNeg = 0;
+
+          for (let j = 0; j < m; j++) {
+            sumPos += Math.pow(weightedMatrix[i][j] - positiveIdeal[j], 2);
+            sumNeg += Math.pow(weightedMatrix[i][j] - negativeIdeal[j], 2);
+          }
+
+          positiveDistances.push(Math.sqrt(sumPos));
+          negativeDistances.push(Math.sqrt(sumNeg));
+        }
+
+        return { positiveDistances, negativeDistances };
+      }
+
+      // Fungsi untuk menampilkan jarak
+      function displayDistances(positiveDistances, negativeDistances) {
+        const body = document.getElementById("distances");
+        body.innerHTML = "";
+
+        sampleData.forEach((item, index) => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+                    <td>${item.kelas} - ${item.matkul}</td>
+                    <td>${positiveDistances[index].toFixed(4)}</td>
+                    <td>${negativeDistances[index].toFixed(4)}</td>
+                `;
+          body.appendChild(row);
+        });
+      }
+
+      // Fungsi untuk menghitung dan menampilkan kedekatan relatif
+      function displayCloseness(positiveDistances, negativeDistances) {
+        const body = document.getElementById("closeness");
+        body.innerHTML = "";
+
+        const closenessScores = [];
+        const n = sampleData.length;
+
+        for (let i = 0; i < n; i++) {
+          const c = negativeDistances[i] / (positiveDistances[i] + negativeDistances[i]);
+          closenessScores.push({ index: i, score: c });
+        }
+
+        // Urutkan berdasarkan skor kedekatan
+        closenessScores.sort((a, b) => b.score - a.score);
+
+        // Tampilkan
+        closenessScores.forEach((item, rank) => {
+          const dataItem = sampleData[item.index];
+          const row = document.createElement("tr");
+          row.innerHTML = `
+                    <td>${dataItem.kelas} - ${dataItem.matkul}</td>
+                    <td>${item.score.toFixed(4)}</td>
+                    <td>${rank + 1}</td>
+                `;
+          body.appendChild(row);
+        });
+
+        return closenessScores;
+      }
+
+      // Fungsi untuk menampilkan hasil akhir
+      function displayResults(closenessScores) {
+        const body = document.getElementById("topsis-results");
+        body.innerHTML = "";
+
+        closenessScores.forEach((item, rank) => {
+          const dataItem = sampleData[item.index];
+          const row = document.createElement("tr");
+          row.innerHTML = `
+                    <td>${rank + 1}</td>
+                    <td>${dataItem.kelas}</td>
+                    <td>${dataItem.matkul}</td>
+                    <td>${dataItem.dosen}</td>
+                    <td>${item.score.toFixed(4)}</td>
+                `;
+
+          if (rank === 0) {
+            row.classList.add("table-success");
+            row.innerHTML = `<td><i class="fas fa-crown text-warning"></i> ${rank + 1}</td>
+                    <td>${dataItem.kelas}</td>
+                    <td>${dataItem.matkul}</td>
+                    <td>${dataItem.dosen}</td>
+                    <td><strong>${item.score.toFixed(4)}</strong></td>`;
+          }
+
+          body.appendChild(row);
+        });
+
+        // Buat chart
+        createChart(closenessScores);
+      }
+
+      // Fungsi untuk membuat chart
+      function createChart(closenessScores) {
+        const ctx = document.getElementById("topsisChart").getContext("2d");
+
+        // Siapkan data untuk chart
+        const labels = closenessScores.map((item) => `${sampleData[item.index].kelas}-${sampleData[item.index].matkul}`);
+
+        const data = closenessScores.map((item) => item.score);
+
+        // Hapus chart lama jika ada
+        if (window.topsisChart) {
+          window.topsisChart.destroy();
+        }
+
+        // Buat chart baru
+        window.topsisChart = new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: "Nilai TOPSIS",
+                data: data,
+                backgroundColor: [
+                  "rgba(46, 204, 113, 0.7)",
+                  "rgba(52, 152, 219, 0.7)",
+                  "rgba(155, 89, 182, 0.7)",
+                  "rgba(52, 73, 94, 0.7)",
+                  "rgba(241, 196, 15, 0.7)",
+                  "rgba(230, 126, 34, 0.7)",
+                  "rgba(231, 76, 60, 0.7)",
+                  "rgba(149, 165, 166, 0.7)",
+                ],
+                borderColor: ["rgba(46, 204, 113, 1)", "rgba(52, 152, 219, 1)", "rgba(155, 89, 182, 1)", "rgba(52, 73, 94, 1)", "rgba(241, 196, 15, 1)", "rgba(230, 126, 34, 1)", "rgba(231, 76, 60, 1)", "rgba(149, 165, 166, 1)"],
+                borderWidth: 1,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              title: {
+                display: true,
+                text: "Perbandingan Nilai TOPSIS",
+                font: {
+                  size: 16,
+                },
+              },
+              legend: {
+                display: false,
+              },
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                title: {
+                  display: true,
+                  text: "Nilai Kedekatan Relatif",
+                },
+              },
+              x: {
+                title: {
+                  display: true,
+                  text: "Mata Kuliah",
+                },
+              },
+            },
+          },
+        });
+      }
+
+      // Fungsi untuk menjalankan seluruh proses TOPSIS
+      function runTOPSIS() {
+        // Tampilkan bobot ROC
+        displayROCWeights(timeSlots.length);
+
+        // Tampilkan matriks keputusan
+        displayDecisionMatrix();
+
+        // Tampilkan matriks ternormalisasi
+        const normalizedMatrix = displayNormalizedMatrix();
+
+        // Tampilkan matriks terbobot
+        const weightedMatrix = displayWeightedMatrix(normalizedMatrix);
+
+        // Tampilkan solusi ideal
+        const { positiveIdeal, negativeIdeal } = displayIdealSolutions(weightedMatrix);
+
+        // Hitung dan tampilkan jarak
+        const { positiveDistances, negativeDistances } = calculateDistances(weightedMatrix, positiveIdeal, negativeIdeal);
+        displayDistances(positiveDistances, negativeDistances);
+
+        // Hitung dan tampilkan kedekatan relatif
+        const closenessScores = displayCloseness(positiveDistances, negativeDistances);
+
+        // Tampilkan hasil akhir
+        displayResults(closenessScores);
+
+        // Animasi untuk menunjukkan proses
+        animateSteps();
+      }
+
+      // Fungsi untuk animasi langkah-langkah
+      function animateSteps() {
+        const steps = document.querySelectorAll(".topsis-process");
+
+        steps.forEach((step, index) => {
+          setTimeout(() => {
+            step.classList.add("highlight");
+
+            // Scroll ke langkah tersebut
+            step.scrollIntoView({ behavior: "smooth", block: "center" });
+
+            // Hapus highlight setelah beberapa saat
+            setTimeout(() => {
+              step.classList.remove("highlight");
+            }, 2000);
+          }, (index + 1) * 1000);
+        });
+      }
+
+      // Event Listeners
+      document.getElementById("load-sample").addEventListener("click", loadInputData);
+      document.getElementById("run-topsis").addEventListener("click", runTOPSIS);
+
+      // Muat data saat halaman dimuat
+      document.addEventListener("DOMContentLoaded", () => {
+        loadInputData();
+      });
+    </script>
+  </body>
+</html>
